@@ -56,8 +56,11 @@
             fluid: true
         });
         function checkBuffer() {
-                const bufferedTime = video.buffered.end(video.buffered.length - 1);
-                const currentTime = video.currentTime;
+        if (player.buffered().length > 0) {  // Ensure buffered is not empty
+            try {
+                // Safely access buffered end time
+                const bufferedTime = player.buffered().end(player.buffered().length - 1);
+                const currentTime = player.currentTime();
                 const bufferGap = bufferedTime - currentTime;
 
                 // Log buffer info
@@ -65,13 +68,19 @@
 
                 // Adjust playback rate if necessary
                 if (bufferGap < 0.5) {
-                    video.playbackRate = 0.9; // Slow down to reduce buffering
+                    player.playbackRate(0.9); // Slow down to reduce buffering
                 } else if (bufferGap > 2) {
-                    video.playbackRate = 1.1; // Speed up if too much buffer
+                    player.playbackRate(1.1); // Speed up if too much buffer
                 } else {
-                    video.playbackRate = 1.0; // Normal speed
+                    player.playbackRate(1.0); // Normal speed
                 }
+            } catch (e) {
+                console.error('Error checking buffer: ', e);
             }
+        } else {
+            console.warn('No buffer data available yet.');
+        }
+    }
 
             // Update buffer every 1 second
             setInterval(checkBuffer, 1000);
