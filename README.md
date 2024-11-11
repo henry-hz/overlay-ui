@@ -63,3 +63,76 @@ socket.on('sync', (data) => {
 });
 ```
 
+
+
+
+```html
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Sync DASH Stream</title>
+        <script src="https://cdn.dashjs.org/latest/dash.all.min.js"></script>
+    </head>
+    <body>
+        <video id="videoPlayer" controls width="640" height="360"></video>
+
+        <script>
+            const syncUrl = "wss://your-websocket-server";  // Replace with your WebSocket server URL
+
+            function initializePlayer() {
+                const streamUrl = "https://br5093.streamingdevideo.com.br/abc/abc/manifest.mpd";
+                const videoElement = document.getElementById("videoPlayer");
+                const player = dashjs.MediaPlayer().create();
+
+                player.initialize(videoElement, streamUrl, true);
+
+                const websocket = new WebSocket(syncUrl);
+
+                websocket.onmessage = (event) => {
+                    const data = JSON.parse(event.data);
+
+                    if (data.type === 'sync') {
+                        const targetTime = data.time;
+                        synchronizePlayback(player, targetTime);
+                    }
+                };
+
+                websocket.onopen = () => {
+                    console.log("WebSocket connection established.");
+                };
+
+                websocket.onerror = (error) => {
+                    console.error("WebSocket error: ", error);
+                };
+
+                websocket.onclose = () => {
+                    console.log("WebSocket connection closed.");
+                };
+            }
+
+            function synchronizePlayback(player, targetTime) {
+                const currentTime = player.time();
+                const timeDifference = targetTime - currentTime;
+
+                if (Math.abs(timeDifference) > 0.5) {  // Tolerance of 0.5 seconds
+                    console.log(`Adjusting playback: jumping to ${targetTime.toFixed(2)} seconds`);
+                    player.seek(targetTime);
+                } else if (timeDifference > 0.1) {
+                    console.log("Speeding up playback slightly.");
+                    player.setPlaybackRate(1.05);  // Slight speed up
+                } else if (timeDifference < -0.1) {
+                    console.log("Slowing down playback slightly.");
+                    player.setPlaybackRate(0.95);  // Slight slow down
+                } else {
+                    console.log("Normalizing playback speed.");
+                    player.setPlaybackRate(1.0);
+                }
+            }
+
+            document.addEventListener("DOMContentLoaded", initializePlayer);
+        </script>
+    </body>
+    </html>
+```
