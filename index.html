@@ -40,25 +40,28 @@
 </head>
 <body>
     <div id="video-container">
-        <video-js id="my-video" class="video-js vjs-default-skin vjs-big-play-centered" controls preload="auto">
-            <source src="https://br5093.streamingdevideo.com.br/abc/abc/playlist.m3u8" type="application/x-mpegURL">
-        </video-js>
+        <video id="my-video" class="video-js vjs-default-skin vjs-big-play-centered" controls preload="auto">
+            <source src="https://br5093.streamingdevideo.com.br/abc/abc/manifest.mpd" type="application/dash+xml">
+        </video>
     </div>
 
     <div id="overlay">opa, legal Anderson, funcionou !</div>
 
     <script src="https://vjs.zencdn.net/7.20.3/video.min.js"></script>
+    <script src="https://cdn.dashjs.org/latest/dash.all.min.js"></script>
     <script>
-        var player = videojs('my-video', {
-            autoplay: true,
-            loop: true,
-            muted: true,
-            fluid: true
-        });
+        // Initialize Dash.js player if needed
+        function initializePlayer() {
+            const url = "https://br5093.streamingdevideo.com.br/abc/abc/manifest.mpd";
+            const videoElement = document.getElementById("my-video");
+            if (videoElement.canPlayType('application/dash+xml')) {
+                // Initialize the Dash player only if necessary
+                const player = dashjs.MediaPlayer().create();
+                player.initialize(videoElement, url, true);
+            }
+        }
 
-        player.ready(function() {
-            player.play();
-        });
+        document.addEventListener("DOMContentLoaded", initializePlayer);
     </script>
 </body>
 </html>
