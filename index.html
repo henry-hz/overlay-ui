@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Stream Player</title>
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
     <style>
         .container {
             position: relative;
@@ -31,10 +32,28 @@
 <body>
     <div class="container">
         <div class="overlay">hey it works!</div>
-        <video id="player" controls autoplay>
-            <source src="https://sirius.navve.studio/rtc/v1/whep/?app=live&stream=alphacine" type="application/x-mpegURL">
-            Your browser does not support the video tag.
-        </video>
+        <video id="player" controls autoplay></video>
     </div>
+
+    <script>
+        const video = document.getElementById('player');
+        const streamUrl = 'https://sirius.navve.studio/rtc/v1/whep/?app=live&stream=alphacine';
+        
+        if (Hls.isSupported()) {
+            const hls = new Hls();
+            hls.loadSource(streamUrl);
+            hls.attachMedia(video);
+            hls.on(Hls.Events.MANIFEST_PARSED, function() {
+                video.play();
+            });
+        }
+        // For browsers with native HLS support
+        else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+            video.src = streamUrl;
+            video.addEventListener('loadedmetadata', function() {
+                video.play();
+            });
+        }
+    </script>
 </body>
 </html>
