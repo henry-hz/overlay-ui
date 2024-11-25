@@ -61,26 +61,26 @@
 
         async function initializePlayer() {
             const videoElement = document.getElementById("my-video");
-            
+
             try {
                 const configuration = {
                     iceServers: [{
                         urls: 'stun:stun.l.google.com:19302'
                     }]
                 };
-                
+
                 const peerConnection = new RTCPeerConnection(configuration);
-                
+
                 // Create and send WHEP offer
                 const whepUrl = 'https://sirius.navve.studio/rtc/v1/whep/?app=live&stream=alphacine';
-                
+
                 // Create offer
                 const offer = await peerConnection.createOffer({
                     offerToReceiveVideo: true,
                     offerToReceiveAudio: true
                 });
                 await peerConnection.setLocalDescription(offer);
-                
+
                 // Send offer to WHEP endpoint
                 const response = await fetch(whepUrl, {
                     method: 'POST',
@@ -89,18 +89,18 @@
                     },
                     body: offer.sdp
                 });
-                
+
                 if (!response.ok) {
                     throw new Error('WHEP request failed');
                 }
-                
+
                 // Get and set remote description
                 const answerSdp = await response.text();
                 await peerConnection.setRemoteDescription({
                     type: 'answer',
                     sdp: answerSdp
                 });
-                
+
                 peerConnection.ontrack = function(event) {
                     if (videoElement.srcObject !== event.streams[0]) {
                         videoElement.srcObject = event.streams[0];
