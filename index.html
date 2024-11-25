@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Full Screen Video with Overlay</title>
     <link href="https://vjs.zencdn.net/7.20.3/video-js.min.css" rel="stylesheet">
+    <script src="https://webrtc.github.io/adapter/adapter-latest.js"></script>
     <style>
         body, html {
             margin: 0;
@@ -41,24 +42,50 @@
 <---https://br5093.streamingdevideo.com.br/abc/abc/manifest.mpd --->
 <body>
     <div id="video-container">
-        <video id="my-video" class="video-js vjs-default-skin vjs-big-play-centered" controls preload="auto">
-            <source src="https://flwplay.vercel.app/?stream=alphacine" type="application/dash+xml">
+        <video id="my-video" class="video-js vjs-default-skin vjs-big-play-centered" controls autoplay playsinline>
         </video>
     </div>
 
     <div id="overlay">opa, legal Anderson, funcionou !</div>
 
     <script src="https://vjs.zencdn.net/7.20.3/video.min.js"></script>
-    <script src="https://cdn.dashjs.org/latest/dash.all.min.js"></script>
     <script>
-        // Initialize Dash.js player if needed
-        function initializePlayer() {
-            const url = "https://br5093.streamingdevideo.com.br/abc/abc/manifest.mpd";
+        async function initializePlayer() {
             const videoElement = document.getElementById("my-video");
-            if (videoElement.canPlayType('application/dash+xml')) {
-                // Initialize the Dash player only if necessary
-                const player = dashjs.MediaPlayer().create();
-                player.initialize(videoElement, url, true);
+            
+            try {
+                const configuration = {
+                    iceServers: [{
+                        urls: 'stun:stun.l.google.com:19302'
+                    }]
+                };
+                
+                const peerConnection = new RTCPeerConnection(configuration);
+                
+                // Replace this URL with your actual WebRTC signaling server endpoint
+                const signalingUrl = 'wss://your-signaling-server.com';
+                const ws = new WebSocket(signalingUrl);
+                
+                ws.onmessage = async function(event) {
+                    const message = JSON.parse(event.data);
+                    if (message.type === 'offer') {
+                        await peerConnection.setRemoteDescription(new RTCSessionDescription(message));
+                        const answer = await peerConnection.createAnswer();
+                        await peerConnection.setLocalDescription(answer);
+                        ws.send(JSON.stringify({
+                            type: 'answer',
+                            sdp: answer
+                        }));
+                    }
+                };
+                
+                peerConnection.ontrack = function(event) {
+                    if (videoElement.srcObject !== event.streams[0]) {
+                        videoElement.srcObject = event.streams[0];
+                    }
+                };
+            } catch (error) {
+                console.error('Error initializing WebRTC:', error);
             }
         }
 
