@@ -25,18 +25,6 @@
             height: 100vh;
             object-fit: cover;
         }
-        #overlay {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 5vw; /* Responsive font size */
-            color: white;
-            font-family: Arial, sans-serif;
-            text-align: center;
-            z-index: 1;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.7);
-        }
     </style>
 </head>
 <!-- https://br5093.streamingdevideo.com.br/abc/abc/manifest.mpd -->
@@ -46,75 +34,13 @@
         </video>
     </div>
 
-    <div id="overlay">
-        <div id="server-time"></div>
-        <div>opa, legal Anderson, funcionou !</div>
-    </div>
 
     <script src="https://vjs.zencdn.net/7.20.3/video.min.js"></script>
     <script>
-        function updateServerTime() {
-            const timeElement = document.getElementById("server-time");
-            const now = new Date();
-            timeElement.textContent = now.toISOString().substr(11, 12);
-        }
-
-        async function initializePlayer() {
+        document.addEventListener("DOMContentLoaded", function() {
             const videoElement = document.getElementById("my-video");
-
-            try {
-                const configuration = {
-                    iceServers: [{
-                        urls: 'stun:stun.l.google.com:19302'
-                    }]
-                };
-
-                const peerConnection = new RTCPeerConnection(configuration);
-
-                // Create and send WHEP offer
-                const whepUrl = 'https://sirius.navve.studio/rtc/v1/whep/?app=live&stream=alphacine';
-
-                // Create offer
-                const offer = await peerConnection.createOffer({
-                    offerToReceiveVideo: true,
-                    offerToReceiveAudio: true
-                });
-                await peerConnection.setLocalDescription(offer);
-
-                // Send offer to WHEP endpoint
-                const response = await fetch(whepUrl, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/sdp'
-                    },
-                    body: offer.sdp
-                });
-
-                if (!response.ok) {
-                    throw new Error('WHEP request failed');
-                }
-
-                // Get and set remote description
-                const answerSdp = await response.text();
-                await peerConnection.setRemoteDescription({
-                    type: 'answer',
-                    sdp: answerSdp
-                });
-
-                peerConnection.ontrack = function(event) {
-                    if (videoElement.srcObject !== event.streams[0]) {
-                        videoElement.srcObject = event.streams[0];
-                    }
-                };
-
-                // Start updating server time
-                setInterval(updateServerTime, 100); // Update every 100ms
-            } catch (error) {
-                console.error('Error initializing WebRTC:', error);
-            }
-        }
-
-        document.addEventListener("DOMContentLoaded", initializePlayer);
+            videoElement.src = "https://sirius.navve.studio/rtc/v1/whep/?app=live&stream=alphacine";
+        });
     </script>
 </body>
 </html>
