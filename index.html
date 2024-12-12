@@ -1,59 +1,43 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Stream Player</title>
-    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/video.js/7.14.3/video-js.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/video.js/7.14.3/video.min.js"></script>
+    <script src="https://player.live-video.net/1.35.0/amazon-ivs-videojs-tech.min.js"></script>
+</head>
+
+<body>
+    <div class="video-container">
+        <video id="amazon-ivs-videojs" class="video-js vjs-4-3 vjs-big-play-centered" controls autoplay playsinline></video>
+    </div>
     <style>
-        .container {
-            position: relative;
-            width: 100%;
-            max-width: 800px;
-            margin: 0 auto;
+        body {
+            margin: 0;
         }
-        .overlay {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            color: white;
-            font-size: 24px;
-            font-family: Arial, sans-serif;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.7);
-            z-index: 1;
-        }
-        video {
-            width: 100%;
-            height: auto;
+
+        .video-container {
+            width: 1280px;
+            height: 720px;
+            margin: 20px;
         }
     </style>
-</head>
-<body>
-    <div class="container">
-        <div class="overlay">hey it works!</div>
-        <video id="player" controls autoplay></video>
-    </div>
-
     <script>
-        const video = document.getElementById('player');
-        const streamUrl = 'https://sirius.navve.studio/rtc/v1/whep/?app=live&stream=alphacine';
-        
-        if (Hls.isSupported()) {
-            const hls = new Hls();
-            hls.loadSource(streamUrl);
-            hls.attachMedia(video);
-            hls.on(Hls.Events.MANIFEST_PARSED, function() {
-                video.play();
+        (function play() {
+            // Get playback URL from Amazon IVS API
+            var PLAYBACK_URL = 'https://e5a493bead53.us-east-1.playback.live-video.net/api/video/v1/us-east-1.831926604623.channel.8NOYvC3tU24X.m3u8';
+            
+            // Register Amazon IVS as playback technology for Video.js
+            registerIVSTech(videojs);
+
+            // Initialize player
+            var player = videojs('amazon-ivs-videojs', {
+               techOrder: ["AmazonIVS"]
+            }, () => {
+               console.log('Player is ready to use!');
+               // Play stream
+               player.src(PLAYBACK_URL);
             });
-        }
-        // For browsers with native HLS support
-        else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-            video.src = streamUrl;
-            video.addEventListener('loadedmetadata', function() {
-                video.play();
-            });
-        }
+        })();
     </script>
 </body>
 </html>
